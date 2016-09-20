@@ -13,6 +13,145 @@ Provides the ability to filter/sort an array and maintain bindings
 			is: 'array-filter',
 
 			properties: {
+				items: {
+					type: Array,
+					notify: true
+				},
+				filtered: {
+					type: Array,
+					notify: true
+				},
+				observe: {
+					type: String
+				},
+				filter: {
+					type: Function,
+					observer: '_filterChanged'
+				},
+				sort: {
+					type: Function,
+					observer: '_sortChanged'
+				}
+			},
+
+			observers: [
+				'_itemsChanged(items.*)'
+			],
+
+			_sortChanged: function(val) {
+				var host = this.domHost;
+				var sort = val;
+				if(typeof val !== 'function') {
+					sort = function() {
+						return host[val].apply(host, arguments);
+					};
+				}
+				this._sortFn = sort;
+			},
+
+			_filterChanged: function(val) {
+				var host = this.domHost;
+				var filter = val;
+				if(typeof filter !== 'function') {
+					filter = function() {
+						return host[val].apply(host, arguments);
+					};
+				}
+				this._filterFn = filter;
+			},
+
+			_itemsChanged: function(change) {
+				var path = change.path;
+
+				if(path === 'items') {
+					this._filter();
+				} else if(path === 'items.length') {
+				} else if(path === 'items.splices') {
+					this._computeSplices(change.value.keySplices, change.value.indexSplices);
+				} else {
+					this._forwardPath(change.path, change.value);
+					this._checkSort(change.path);
+				}
+			},
+
+			_filter: function() {
+				this.filtered = this._computeFiltered(this.items);
+			},
+
+			_computeFiltered: function(base) {
+				if(!base) {
+					return;
+				}
+
+				var result = base.slice(0);
+
+				if(this._filterFn) {
+					result = result.filter(this._filterFn);
+				}
+
+				if(this._sortFn) {
+					result = result.sort(this._sortFn);
+				}
+
+				return result;
+			},
+
+			_computeSplices: function(keys, index) {
+				index.forEach(function(splice) {
+					var filtered = this._computeFiltered(splice.object);
+					var inserts = [];
+					var item;
+
+					splice.removed.forEach(function(remove) {
+						var idx = this.filtered.indexOf(remove);
+						this.splice('filtered', idx, 1);
+					}.bind(this));
+
+					for(var i = 0; i < splice.addedCount; i++) {
+						item = splice.object[splice.index + i];
+						inserts.push([item, filtered.indexOf(item)]);
+					}
+
+					inserts.sort(function(a, b) {
+						return a[1] - b[1];
+					}).forEach(function(insert) {
+						this.splice('filtered', insert[1], 0, insert[0]);
+					}.bind(this));
+				}.bind(this));
+			},
+
+			_forwardPath: function(path, val) {
+				var parts = path.split('.');
+				var collection = Polymer.Collection.get(this.items);
+				var item = collection.getItem(parts[1]);
+				var idx = this.filtered.indexOf(item);
+				if(idx !== -1) {
+					this.notifyPath([
+						'filtered',
+						idx,
+						parts.slice(2).join('.')
+					], val);
+				}
+			},
+
+			_checkSort: function(path) {
+				var parts = path.split('.');
+				var key = parts[1];
+				var tail = parts.length > 2 ? parts.slice(2).join('.') : null;
+
+				if(this.observe && (this.sort || this.filter)) {
+					if(!tail) {
+						this._filter();
+					} else {
+						var observe = this.observe.split(' ');
+						var matches = observe.some(function(p) {
+							return Polymer.Path.matches(tail, true, p);
+						});
+						if(matches) {
+							this._filter();
+						}
+					}
+				}
 			}
 		});
 	</script>
