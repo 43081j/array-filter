@@ -209,7 +209,6 @@ and filter state will be recomputed.
 					splice.removed.forEach(function(remove) {
 						var idx = this._filteredCollection.getKey(remove);
 						this.arrayDelete('filtered', remove);
-						this.unlinkPaths('filtered.' + idx);
 					}.bind(this));
 
 					for(var i = 0; i < splice.addedCount; i++) {
@@ -223,12 +222,10 @@ and filter state will be recomputed.
 						return a[1] - b[1];
 					}).forEach(function(insert) {
 						this.splice('filtered', insert[1], 0, insert[0]);
-						this.linkPaths(
-							'filtered.' + this._filteredCollection.getKey(insert[0]),
-							'items.' + this._itemsCollection.getKey(insert[0])
-						);
 					}.bind(this));
 				}.bind(this));
+
+				this._resetLinks();
 			},
 
 			_applyObserver: function(path) {
@@ -238,8 +235,7 @@ and filter state will be recomputed.
 				var idx = this._itemsCollection.getKey(item);
 				var fIdx = this._filteredCollection.getKey(item);
 
-				this.unlinkPaths('filtered.' + fIdx);
-				this.splice('filtered', idx, 1);
+				this.arrayDelete('filtered', item);
 
 				if(filtered.indexOf(item) !== -1) {
 					this.splice(
@@ -249,6 +245,8 @@ and filter state will be recomputed.
 						item
 					);
 				}
+
+				this._resetLinks();
 			},
 
 			_checkSort: function(path) {
