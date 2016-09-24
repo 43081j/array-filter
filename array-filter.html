@@ -259,9 +259,13 @@ and filter state will be recomputed.
 					if(parts.length <= 2) {
 						this._debounceFilter();
 					} else {
+						var tail = parts.slice(2).join('.');
 						var observe = this.observe.split(' ');
 						var matches = observe.some(function(p) {
-							return Polymer.Path.matches(tail, true, p);
+							// TODO: Use Polymer.Path when it exists
+							return (tail === p) ||
+									tail.indexOf(p + '.') === 0 ||
+									p.indexOf(base + '.') === 0;
 						});
 						if(matches) {
 							this._applyObserver(path);
