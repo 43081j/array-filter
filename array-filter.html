@@ -109,12 +109,19 @@ and filter state will be recomputed.
 			_sortChanged: function(val) {
 				var host = this.domHost;
 				var sort = val;
-				if(typeof val !== 'function') {
-					sort = function() {
-						return host[val].apply(host, arguments);
-					};
-				}
-				this._sortFn = sort;
+
+                if(!sort) {
+                    sort = undefined;
+                } else {
+                    if(typeof val !== 'function') {
+                        sort = function() {
+                            return host[val].apply(host, arguments);
+                        };
+                    }
+                }
+
+                this._sortFn = sort;
+
 				if(this.items) {
 					this._debounceFilter();
 				}
@@ -127,12 +134,19 @@ and filter state will be recomputed.
 			_filterChanged: function(val) {
 				var host = this.domHost;
 				var filter = val;
-				if(typeof filter !== 'function') {
-					filter = function() {
-						return host[val].apply(host, arguments);
-					};
-				}
-				this._filterFn = filter;
+
+                if(!filter) {
+                    filter = undefined;
+                } else {
+                    if(typeof filter !== 'function') {
+                        filter = function() {
+                            return host[val].apply(host, arguments);
+                        };
+                    }
+                }
+
+                this._filterFn = filter;
+
 				if(this.items) {
 					this._debounceFilter();
 				}
