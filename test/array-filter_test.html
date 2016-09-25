@@ -11,7 +11,6 @@
 		<link rel="import" href="../array-filter.html">
 	</head>
 	<body>
-
 		<test-fixture id="basic">
 			<template>
 				<array-filter></array-filter>
@@ -20,12 +19,220 @@
 
 		<script>
 			suite('array-filter', function() {
+                var el;
+
+                setup(function() {
+                    el = fixture('basic');
+                    el.items = [
+                        { name: 'bob' },
+                        { name: 'barry' },
+                        { name: 'frank' },
+                        { name: 'odin' },
+                        { name: 'albert' }
+                    ];
+                });
 
 				test('instantiating the element works', function() {
-					var element = fixture('basic');
-					assert.equal(element.is, 'array-filter');
+					assert.equal(el.is, 'array-filter');
 				});
 
+                test('simple pass-through filtering', function(done) {
+                    flush(function() {
+                        assert.equal(el.filtered.length, 5);
+                        assert.equal(el.filtered[0].name, 'bob');
+                        assert.equal(el.filtered[1].name, 'barry');
+                        assert.equal(el.filtered[2].name, 'frank');
+                        assert.equal(el.filtered[3].name, 'odin');
+                        assert.equal(el.filtered[4].name, 'albert');
+                        done();
+                    });
+                });
+
+                test('simple filtering', function(done) {
+                    el.filter = item => item.name !== 'bob' &&
+                                        item.name !== 'barry';
+
+                    flush(function() {
+                        assert.equal(el.filtered.length, 3);
+                        assert.equal(el.filtered[0].name, 'frank');
+                        assert.equal(el.filtered[1].name, 'odin');
+                        assert.equal(el.filtered[2].name, 'albert');
+                        done();
+                    });
+                });
+
+                test('simple sorting', function(done) {
+                    el.sort = (a, b) => a.name < b.name ? -1 : 1;
+
+                    flush(function() {
+                        assert.equal(el.filtered[0].name, 'albert');
+                        assert.equal(el.filtered[1].name, 'barry');
+                        assert.equal(el.filtered[2].name, 'bob');
+                        assert.equal(el.filtered[3].name, 'frank');
+                        assert.equal(el.filtered[4].name, 'odin');
+                        done();
+                    });
+                });
+
+                test('filter and sort combination', function(done) {
+                    el.sort = (a, b) => a.name < b.name ? -1 : 1;
+                    el.filter = item => item.name !== 'bob' &&
+                                        item.name !== 'barry';
+
+                    flush(function() {
+                        assert.equal(el.filtered.length, 3);
+                        assert.equal(el.filtered[0].name, 'albert');
+                        assert.equal(el.filtered[1].name, 'frank');
+                        assert.equal(el.filtered[2].name, 'odin');
+                        done();
+                    });
+                });
+
+                test('filter removal', function(done) {
+                    el.filter = item => item.name !== 'bob' &&
+                                        item.name !== 'barry';
+
+                    flush(function() {
+                        assert.equal(el.filtered.length, 3);
+                        el.filter = null;
+                        flush(function() {
+                            assert.equal(el.filtered.length, 5);
+                            done();
+                        });
+                    });
+                });
+
+                test('sort removal', function(done) {
+                    el.sort = (a, b) => a.name < b.name ? -1 : 1;
+
+                    flush(function() {
+                        assert.equal(el.filtered[0].name, 'albert');
+                        el.sort = null;
+                        flush(function() {
+                            assert.equal(el.filtered[0].name, 'bob');
+                            done();
+                        });
+                    });
+                });
+
+                test('recompute on reference change', function(done) {
+                    flush(function() {
+                        assert.equal(el.filtered.length, 5);
+
+                        el.items = [{ name: 'foobles' }];
+
+                        flush(function() {
+                            assert.equal(el.filtered.length, 1);
+                            done();
+                        });
+                    });
+                });
+
+                test('sub-property changes', function(done) {
+                    flush(function() {
+                        el.set('items.#0.name', 'charlie');
+                        assert.equal(el.filtered[0].name, 'charlie');
+                        done();
+                    });
+                });
+
+                test('single property observer', function(done) {
+                    el.observe = 'name';
+                    el.sort = (a, b) => a.name < b.name ? -1 : 1;
+                    el.filter = item => item.name !== 'bob';
+
+                    flush(function() {
+                        assert.equal(el.filtered.length, 4);
+                        el.set('items.#0.name', 'bobby');
+                        flush(function() {
+                            assert.equal(el.filtered.length, 5);
+                            assert.equal(el.filtered[2].name, 'bobby');
+                            el.set('items.#0.name', 'zeus');
+                            flush(function() {
+                                assert.equal(el.filtered[2].name, 'frank');
+                                assert.equal(el.filtered[4].name, 'zeus');
+                                done();
+                            });
+                        });
+                    });
+                });
+
+                test('multiple property observer', function() {
+                });
+
+                test('pushing to array', function(done) {
+                    el.sort = (a, b) => a.name < b.name ? -1 : 1;
+
+                    flush(function() {
+                        el.push('items', { name: 'aaron' });
+                        flush(function() {
+                            assert.equal(el.filtered.length, 6);
+                            assert.equal(el.filtered[0].name, 'aaron');
+                            done();
+                        });
+                    });
+                });
+
+                test('unshifting to array', function(done) {
+                    el.sort = (a, b) => a.name < b.name ? -1 : 1;
+
+                    flush(function() {
+                        el.unshift('items', { name: 'zeus' });
+                        flush(function() {
+                            assert.equal(el.filtered.length, 6);
+                            assert.equal(el.filtered[5].name, 'zeus');
+                            done();
+                        });
+                    });
+                });
+
+                test('splicing array', function(done) {
+                    el.sort = (a, b) => a.name < b.name ? -1 : 1;
+
+                    flush(function() {
+                        el.splice(
+                            'items',
+                            2,
+                            1,
+                            { name: 'zeus' },
+                            { name: 'aaron' }
+                        );
+                        flush(function() {
+                            assert.equal(el.filtered.length, 6);
+                            assert.equal(el.filtered[0].name, 'aaron');
+                            assert.equal(el.filtered[1].name, 'albert');
+                            assert.equal(el.filtered[2].name, 'barry');
+                            assert.equal(el.filtered[3].name, 'bob');
+                            assert.equal(el.filtered[4].name, 'odin');
+                            assert.equal(el.filtered[5].name, 'zeus');
+                            done();
+                        });
+                    });
+                });
+
+                test('push to array with filter', function(done) {
+                    el.filter = item => item.name !== 'harry';
+
+                    flush(function() {
+                        el.push('items', { name: 'harry' });
+                        flush(function() {
+                            assert.equal(el.filtered.length, 5);
+                            done();
+                        });
+                    });
+                });
+
+                test('splice array with filter', function(done) {
+                    el.filter = item => item.name !== 'harry';
+
+                    flush(function() {
+                        el.splice('items', 2, 0, { name: 'harry' });
+                        flush(function() {
+                            assert.equal(el.filtered.length, 5);
+                            done();
+                        });
+                    });
+                });
 			});
 		</script>
 	</body>
