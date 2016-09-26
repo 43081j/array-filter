@@ -1,24 +1,24 @@
 <!doctype html>
 
 <html>
-	<head>
-		<title>array-filter test</title>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
-		<script src="../../webcomponentsjs/webcomponents-lite.js"></script>
-		<script src="../../web-component-tester/browser.js"></script>
+    <head>
+        <title>array-filter test</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+        <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+        <script src="../../web-component-tester/browser.js"></script>
 
-		<link rel="import" href="../array-filter.html">
-	</head>
-	<body>
-		<test-fixture id="basic">
-			<template>
-				<array-filter></array-filter>
-			</template>
-		</test-fixture>
+        <link rel="import" href="../array-filter.html">
+    </head>
+    <body>
+        <test-fixture id="basic">
+            <template>
+                <array-filter></array-filter>
+            </template>
+        </test-fixture>
 
-		<script>
-			suite('array-filter', function() {
+        <script>
+            suite('array-filter', function() {
                 var el;
 
                 setup(function() {
@@ -32,9 +32,9 @@
                     ];
                 });
 
-				test('instantiating the element works', function() {
-					assert.equal(el.is, 'array-filter');
-				});
+                test('instantiating the element works', function() {
+                    assert.equal(el.is, 'array-filter');
+                });
 
                 test('simple pass-through filtering', function(done) {
                     flush(function() {
@@ -233,7 +233,7 @@
                         });
                     });
                 });
-			});
-		</script>
-	</body>
+            });
+        </script>
+    </body>
 </html>
