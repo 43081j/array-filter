@@ -277,7 +277,7 @@ and filter state will be recomputed.
 							// TODO: Use Polymer.Path when it exists
 							return (tail === p) ||
 									tail.indexOf(p + '.') === 0 ||
-									p.indexOf(base + '.') === 0;
+									p.indexOf(tail + '.') === 0;
 						});
 						if(matches) {
 							this._applyObserver(path);
