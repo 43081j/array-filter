@@ -247,17 +247,23 @@ and filter state will be recomputed.
                 var filtered = this._computeFiltered(this.items);
                 var item = this._itemsCollection.getItem(parts[1]);
                 var idx = this._itemsCollection.getKey(item);
-                var fIdx = this._filteredCollection.getKey(item);
+                var currentIdx = this._filteredCollection.getKey(item);
+                var newIdx = filtered.indexOf(item);
 
-                this.arrayDelete('filtered', item);
+                if(currentIdx !== '#' + newIdx) {
+                    if(currentIdx !== undefined) {
+                        this.unlinkPaths('filtered.' + currentIdx);
+                        this.arrayDelete('filtered', item);
+                    }
 
-                if(filtered.indexOf(item) !== -1) {
-                    this.splice(
-                        'filtered',
-                        filtered.indexOf(item),
-                        0,
-                        item
-                    );
+                    if(newIdx !== -1) {
+                        this.splice(
+                            'filtered',
+                            newIdx,
+                            0,
+                            item
+                        );
+                    }
                 }
 
                 this._resetLinks();
