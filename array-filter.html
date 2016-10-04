@@ -93,12 +93,6 @@ and filter state will be recomputed.
                 sort: {
                     type: Function,
                     observer: '_sortChanged'
-                },
-                _filteredCollection: {
-                    type: Object
-                },
-                _itemsCollection: {
-                    type: Object
                 }
             },
 
@@ -170,12 +164,12 @@ and filter state will be recomputed.
                     var item, idx;
                     for(var i = 0; i < this.filtered.length; i++) {
                         item = this.filtered[i];
-                        idx = this._filteredCollection.getKey(item);
+                        idx = '#' + this.filtered.indexOf(item);
 
                         this.unlinkPaths('filtered.' + idx);
                         this.linkPaths(
                             'filtered.' + idx,
-                            'items.' + this._itemsCollection.getKey(item)
+                            'items.#' + this.items.indexOf(item)
                         );
                     }
                 }
@@ -183,8 +177,6 @@ and filter state will be recomputed.
 
             _filter: function() {
                 this.filtered = this._computeFiltered(this.items);
-                this._itemsCollection = Polymer.Collection.get(this.items);
-                this._filteredCollection = Polymer.Collection.get(this.filtered);
                 this._resetLinks();
             },
 
@@ -221,7 +213,6 @@ and filter state will be recomputed.
                     var item;
 
                     splice.removed.forEach(function(remove) {
-                        var idx = this._filteredCollection.getKey(remove);
                         this.arrayDelete('filtered', remove);
                     }.bind(this));
 
@@ -245,14 +236,14 @@ and filter state will be recomputed.
             _applyObserver: function(path) {
                 var parts = path.split('.');
                 var filtered = this._computeFiltered(this.items);
-                var item = this._itemsCollection.getItem(parts[1]);
-                var idx = this._itemsCollection.getKey(item);
-                var currentIdx = this._filteredCollection.getKey(item);
+                var item = this.items[parseInt(parts[1].slice(1))];
+                var idx = this.items.indexOf(item);
+                var currentIdx = this.filtered.indexOf(item);
                 var newIdx = filtered.indexOf(item);
 
-                if(currentIdx !== '#' + newIdx) {
-                    if(currentIdx !== undefined) {
-                        this.unlinkPaths('filtered.' + currentIdx);
+                if(currentIdx !== newIdx) {
+                    if(currentIdx !== -1) {
+                        this.unlinkPaths('filtered.#' + currentIdx);
                         this.arrayDelete('filtered', item);
                     }
 
