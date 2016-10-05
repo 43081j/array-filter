@@ -161,15 +161,17 @@ and filter state will be recomputed.
 
             _resetLinks: function() {
                 if(this.filtered) {
+                    var filteredCollection = Polymer.Collection.get(this.filtered);
+                    var itemsCollection = Polymer.Collection.get(this.items);
                     var item, idx;
                     for(var i = 0; i < this.filtered.length; i++) {
                         item = this.filtered[i];
-                        idx = '#' + this.filtered.indexOf(item);
+                        idx = filteredCollection.getKey(item);
 
                         this.unlinkPaths('filtered.' + idx);
                         this.linkPaths(
                             'filtered.' + idx,
-                            'items.#' + this.items.indexOf(item)
+                            'items.' + itemsCollection.getKey(item)
                         );
                     }
                 }
@@ -236,14 +238,16 @@ and filter state will be recomputed.
             _applyObserver: function(path) {
                 var parts = path.split('.');
                 var filtered = this._computeFiltered(this.items);
-                var item = this.items[parseInt(parts[1].slice(1))];
-                var idx = this.items.indexOf(item);
+                var filteredCollection = Polymer.Collection.get(this.filtered);
+                var itemsCollection = Polymer.Collection.get(this.items);
+                var item = itemsCollection.getItem(parts[1]);
                 var currentIdx = this.filtered.indexOf(item);
                 var newIdx = filtered.indexOf(item);
 
                 if(currentIdx !== newIdx) {
                     if(currentIdx !== -1) {
-                        this.unlinkPaths('filtered.#' + currentIdx);
+                        var currentColIdx = filteredCollection.getKey(item);
+                        this.unlinkPaths('filtered.' + currentColIdx);
                         this.arrayDelete('filtered', item);
                     }
 
