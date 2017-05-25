@@ -47,61 +47,68 @@ For this reason, you can use the `observe` propert.
 In the example, any time the `name` property of a child changes, the sort
 and filter state will be recomputed.
 
-@demo demo/index.html 
+@demo demo/index.html
 -->
 
-<dom-module id="array-filter">
-    <script>
-        Polymer({
-            is: 'array-filter',
+<script>
+    (function() {
+        class ArrayFilter extends Polymer.Element {
+            static get properties() {
+                return {
+                    /*
+                     * An array containing items to be filtered/sorted
+                     */
+                    items: {
+                        type: Array,
+                        notify: true
+                    },
+                    /*
+                     * The `items` array after having any filter/sort applied
+                     */
+                    filtered: {
+                        type: Array,
+                        notify: true
+                    },
+                    /*
+                     * A space-separated list of paths to observe in children.
+                     * When one or more of these paths change in a child, the
+                     * child will be re-sorted/re-filtered.
+                     */
+                    observe: {
+                        type: String
+                    },
+                    /*
+                     * A function or the name of a method to be used for
+                     * filtering the `items` array.
+                     */
+                    filter: {
+                        type: Function,
+                        observer: '_filterChanged'
+                    },
+                    /*
+                     * A function or the name of a method to be used for
+                     * sorting the `items` array.
+                     */
+                    sort: {
+                        type: Function,
+                        observer: '_sortChanged'
+                    }
+                };
+            }
 
-            properties: {
-                /*
-                 * An array containing items to be filtered/sorted
-                 */
-                items: {
-                    type: Array,
-                    notify: true
-                },
-                /*
-                 * The `items` array after having any filter/sort applied
-                 */
-                filtered: {
-                    type: Array,
-                    notify: true
-                },
-                /*
-                 * A space-separated list of paths to observe in children.
-                 * When one or more of these paths change in a child, the
-                 * child will be re-sorted/re-filtered.
-                 */
-                observe: {
-                    type: String
-                },
-                /*
-                 * A function or the name of a method to be used for
-                 * filtering the `items` array.
-                 */
-                filter: {
-                    type: Function,
-                    observer: '_filterChanged'
-                },
-                /*
-                 * A function or the name of a method to be used for
-                 * sorting the `items` array.
-                 */
-                sort: {
-                    type: Function,
-                    observer: '_sortChanged'
-                }
-            },
+            static get observers() {
+                return [
+                    '_itemsChanged(items.*)'
+                ];
+            }
 
-            observers: [
-                '_itemsChanged(items.*)'
-            ],
+            constructor() {
+                super();
+                this._filterDebouncer = null;
+            }
 
-            _sortChanged: function(val) {
-                var host = this.domHost;
+            _sortChanged(val) {
+                var host = this.getRootNode().host;
                 var sort = val;
 
                 if(!sort) {
@@ -119,14 +126,17 @@ and filter state will be recomputed.
                 if(this.items) {
                     this._debounceFilter();
                 }
-            },
+            }
 
-            _debounceFilter: function() {
-                this.debounce('_filter', this._filter);
-            },
+            _debounceFilter() {
+                this._filterDebouncer = Polymer.Debouncer.debounce(
+                    this._filterDebouncer,
+                    Polymer.Async.microTask,
+                    this._filter.bind(this));
+            }
 
-            _filterChanged: function(val) {
-                var host = this.domHost;
+            _filterChanged(val) {
+                var host = this.getRootNode().host;
                 var filter = val;
 
                 if(!filter) {
@@ -144,9 +154,9 @@ and filter state will be recomputed.
                 if(this.items) {
                     this._debounceFilter();
                 }
-            },
+            }
 
-            _itemsChanged: function(change) {
+            _itemsChanged(change) {
                 var path = change.path;
 
                 if(path === 'items') {
@@ -157,40 +167,36 @@ and filter state will be recomputed.
                 } else {
                     this._checkSort(change.path);
                 }
-            },
+            }
 
-            _resetLinks: function() {
+            _resetLinks() {
                 if(this.filtered) {
-                    var filteredCollection = Polymer.Collection.get(this.filtered);
-                    var itemsCollection = Polymer.Collection.get(this.items);
                     var item, idx;
                     for(var i = 0; i < this.filtered.length; i++) {
                         item = this.filtered[i];
-                        idx = filteredCollection.getKey(item);
-
-                        this.unlinkPaths('filtered.' + idx);
+                        this.unlinkPaths('filtered.' + i);
                         this.linkPaths(
-                            'filtered.' + idx,
-                            'items.' + itemsCollection.getKey(item)
+                            'filtered.' + i,
+                            'items.' + this.items.indexOf(item)
                         );
                     }
                 }
-            },
+            }
 
-            _filter: function() {
+            _filter() {
                 this.filtered = this._computeFiltered(this.items);
                 this._resetLinks();
-            },
+            }
 
             /*
              * Forces filter/sort to be re-applied asynchronously
              * @method update
              */
-            update: function() {
+            update() {
                 this._debounceFilter();
-            },
+            }
 
-            _computeFiltered: function(base) {
+            _computeFiltered(base) {
                 if(!base) {
                     return;
                 }
@@ -206,16 +212,17 @@ and filter state will be recomputed.
                 }
 
                 return result;
-            },
+            }
 
-            _computeSplices: function(keys, index) {
+            _computeSplices(keys, index) {
                 index.forEach(function(splice) {
                     var filtered = this._computeFiltered(splice.object);
                     var inserts = [];
                     var item;
 
                     splice.removed.forEach(function(remove) {
-                        this.arrayDelete('filtered', remove);
+                        this.splice('filtered',
+                            this.filtered.indexOf(remove), 1);
                     }.bind(this));
 
                     for(var i = 0; i < splice.addedCount; i++) {
@@ -233,22 +240,19 @@ and filter state will be recomputed.
                 }.bind(this));
 
                 this._resetLinks();
-            },
+            }
 
-            _applyObserver: function(path) {
+            _applyObserver(path) {
                 var parts = path.split('.');
                 var filtered = this._computeFiltered(this.items);
-                var filteredCollection = Polymer.Collection.get(this.filtered);
-                var itemsCollection = Polymer.Collection.get(this.items);
-                var item = itemsCollection.getItem(parts[1]);
+                var item = this.items[parseInt(parts[1])];
                 var currentIdx = this.filtered.indexOf(item);
                 var newIdx = filtered.indexOf(item);
 
                 if(currentIdx !== newIdx) {
                     if(currentIdx !== -1) {
-                        var currentColIdx = filteredCollection.getKey(item);
-                        this.unlinkPaths('filtered.' + currentColIdx);
-                        this.arrayDelete('filtered', item);
+                        this.unlinkPaths('filtered.' + currentIdx);
+                        this.splice('filtered', currentIdx, 1);
                     }
 
                     if(newIdx !== -1) {
@@ -262,9 +266,9 @@ and filter state will be recomputed.
                 }
 
                 this._resetLinks();
-            },
+            }
 
-            _checkSort: function(path) {
+            _checkSort(path) {
                 var parts = path.split('.');
                 var key = parts[1];
 
@@ -286,6 +290,7 @@ and filter state will be recomputed.
                     }
                 }
             }
-        });
-    </script>
-</dom-module>
+        }
+        customElements.define('array-filter', ArrayFilter);
+    })();
+</script>
