@@ -1,0 +1,25 @@
+{
+  "name": "array-filter",
+  "description": "Provides the ability to filter/sort an array and maintain bindings",
+  "main": "array-filter.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#^2.0.0"
+  },
+  "devDependencies": {
+    "iron-component-page": "PolymerElements/iron-component-page#^2.0.0",
+    "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
+    "web-component-tester": "^6.0.0",
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.1"
+  },
+  "homepage": "https://github.com/43081j/array-filter",
+  "_release": "b703b9e03d",
+  "_resolution": {
+    "type": "branch",
+    "branch": "master",
+    "commit": "b703b9e03d53ac30652e5425f89470d8d261e061"
+  },
+  "_source": "https://github.com/43081j/array-filter.git",
+  "_target": "master",
+  "_originalSource": "43081j/array-filter",
+  "_direct": true
+}

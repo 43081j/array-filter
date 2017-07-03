@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+    <head>
+        <title>array-filter demo</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
+        <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+        <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+        <link rel="import" href="../array-filter.html">
+    </head>
+    <body>
+
+        <div class="vertical-section-container centered">
+            <array-filter-basic></array-filter-basic>
+        </div>
+
+        <dom-module id="array-filter-basic">
+            <template>
+                <style is="custom-style" include="demo-pages-shared-styles"></style>
+                <style>
+                    .horizontal-section-container {
+                        margin-bottom: 10px;
+                    }
+                    input[type="text"] {
+                        margin-bottom: 5px;
+                        width: 100%;
+                    }
+                </style>
+                <array-filter
+                    id="filter"
+                    observe="name"
+                    items="{{items}}"
+                    sort="_sort"
+                    filter="_filter"
+                    filtered="{{filtered}}"></array-filter>
+                <div class="horizontal-section-container">
+                    <div class="horizontal-section">
+                        <h3>Basic array-filter Demo</h3>
+                        <input placeholder="Search..." type="text" value="{{_search::input}}">
+                    </div>
+                </div>
+                <div class="horizontal-section-container">
+                    <div class="horizontal-section">
+                        <h4>Items</h4>
+                        <template is="dom-repeat" items="{{items}}">
+                            <div>
+                                <input type="text" value="{{item.name::input}}">
+                            </div>
+                        </template>
+                    </div>
+                    <div class="horizontal-section">
+                        <h4>Filtered</h4>
+                        <template is="dom-repeat" items="{{filtered}}">
+                            <div>
+                                <input type="text" value="{{item.name::input}}">
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+            <script>
+                Polymer({
+                    is: 'array-filter-basic',
+                    properties: {
+                        _search: {
+                            type: String,
+                            value: '',
+                            observer: '_searchChanged'
+                        },
+                        items: {
+                            type: Array,
+                            value: function() {
+                                return [
+                                    { name: 'Bob' },
+                                    { name: 'Lee' },
+                                    { name: 'Will' },
+                                    { name: 'Roger' },
+                                    { name: 'Bill' }
+                                ];
+                            }
+                        },
+                        filtered: {
+                            type: Array
+                        }
+                    },
+
+                    _searchChanged: function() {
+                        this.$.filter.update();
+                    },
+
+                    _filter: function(item) {
+                        return !this._search || item.name.toLowerCase().indexOf(this._search) !== -1;
+                    },
+
+                    _sort: function(a, b) {
+                        return (a.name > b.name ? 1 : -1);
+                    }
+                });
+            </script>
+        </dom-module>
+    </body>
+</html>
