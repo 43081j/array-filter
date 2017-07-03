@@ -32,10 +32,6 @@
                     ];
                 });
 
-                test('instantiating the element works', function() {
-                    assert.equal(el.is, 'array-filter');
-                });
-
                 test('simple pass-through filtering', function(done) {
                     flush(function() {
                         assert.equal(el.filtered.length, 5);
@@ -130,7 +126,7 @@
 
                 test('sub-property changes', function(done) {
                     flush(function() {
-                        el.set('items.#0.name', 'charlie');
+                        el.set('items.0.name', 'charlie');
                         assert.equal(el.filtered[0].name, 'charlie');
                         done();
                     });
@@ -143,11 +139,11 @@
 
                     flush(function() {
                         assert.equal(el.filtered.length, 4);
-                        el.set('items.#0.name', 'bobby');
+                        el.set('items.0.name', 'bobby');
                         flush(function() {
                             assert.equal(el.filtered.length, 5);
                             assert.equal(el.filtered[2].name, 'bobby');
-                            el.set('items.#0.name', 'zeus');
+                            el.set('items.0.name', 'zeus');
                             flush(function() {
                                 assert.equal(el.filtered[2].name, 'frank');
                                 assert.equal(el.filtered[4].name, 'zeus');
