@@ -172,13 +172,16 @@ and filter state will be recomputed.
             _resetLinks() {
                 if(this.filtered) {
                     var item, idx;
-                    for(var i = 0; i < this.filtered.length; i++) {
-                        item = this.filtered[i];
-                        this.unlinkPaths('filtered.' + i);
-                        this.linkPaths(
-                            'filtered.' + i,
-                            'items.' + this.items.indexOf(item)
-                        );
+                    for(var i = 0; i < this.items.length; i++) {
+                        item = this.items[i];
+                        this.unlinkPaths('items.' + i);
+                        idx = this.filtered.indexOf(item);
+                        if(idx !== -1) {
+                            this.linkPaths(
+                                'items.' + i,
+                                'filtered.' + idx
+                            );
+                        }
                     }
                 }
             }
