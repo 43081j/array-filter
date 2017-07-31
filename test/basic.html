@@ -132,6 +132,35 @@
                     });
                 });
 
+                test('filtered sub-property changes', function(done) {
+                    el.filter = item => item.name.indexOf('b') === 0;
+                    el.observe = 'name';
+
+                    flush(function() {
+                        el.set('items.2.name', 'bill');
+                        assert.equal(el.filtered[2].name, 'bill');
+                        el.set('items.2.name', 'bill1');
+                        assert.equal(el.filtered[2].name, 'bill1');
+                        done();
+                    });
+                });
+
+                test('force update', function(done) {
+                    let filterText = null;
+                    el.filter = item => !filterText || item.name.indexOf(filterText) === 0;
+                    el.observe = 'name';
+
+                    flush(function() {
+                        assert.equal(el.filtered.length, 5);
+                        filterText = 'b';
+                        el.update();
+                        flush(function() {
+                            assert.equal(el.filtered.length, 2);
+                            done();
+                        });
+                    });
+                });
+
                 test('single property observer', function(done) {
                     el.observe = 'name';
                     el.sort = (a, b) => a.name < b.name ? -1 : 1;
@@ -153,8 +182,7 @@
                     });
                 });
 
-                test('multiple property observer', function() {
-                });
+                test('multiple property observer');
 
                 test('pushing to array', function(done) {
                     el.sort = (a, b) => a.name < b.name ? -1 : 1;
